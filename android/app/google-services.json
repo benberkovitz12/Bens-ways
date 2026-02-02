@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "346959556725",
+    "project_id": "bens-ways",
+    "storage_bucket": "bens-ways.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:346959556725:android:a0553f429088fbb0a0483c",
+        "android_client_info": {
+          "package_name": "com.example.bens_ways"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAxMCSPqnmlTx5QsTUkwFXDZ4qRmS3owm8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
