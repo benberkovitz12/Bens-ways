@@ -42,6 +42,11 @@ dependencies:
   google_maps_flutter: ^2.12.3
   flutter_map: ^8.2.2
   latlong2: ^0.9.1
+  flutter_localizations:
+    sdk: flutter
+  shared_preferences: ^2.5.3
+  firebase_auth: ^6.5.4
+  share_plus: ^12.0.2
 
 dev_dependencies:
   flutter_test:
@@ -54,6 +59,10 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
 
+  # Generates the Android launcher icons from assets/icon/icon.png.
+  # One-time tool: run `dart run flutter_launcher_icons` after pub get.
+  flutter_launcher_icons: ^0.14.1
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -64,6 +73,8 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  assets:
+    - assets/images/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
@@ -95,3 +106,12 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# ─────────────────────────────────────────────────────────────────
+# Launcher icon config — reads assets/icon/icon.png and generates
+# every Android icon size. Run:  dart run flutter_launcher_icons
+# ─────────────────────────────────────────────────────────────────
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/icon.png"
