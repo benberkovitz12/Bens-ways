@@ -134,7 +134,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
       // Grab one fix and measure distance to the trailhead.
       final pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
 
       final dist = Geodesy().distanceBetweenTwoGeoPoints(

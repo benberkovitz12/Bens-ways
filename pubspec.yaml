@@ -38,8 +38,7 @@ dependencies:
   cloud_firestore: ^6.1.1
   url_launcher: ^6.3.2
   geodesy: ^0.10.2
-  geolocator: 10.1.0
-  google_maps_flutter: ^2.12.3
+  geolocator: ^13.0.4
   flutter_map: ^8.2.2
   latlong2: ^0.9.1
   flutter_localizations:
