@@ -112,5 +112,8 @@ flutter:
 # ─────────────────────────────────────────────────────────────────
 flutter_launcher_icons:
   android: true
-  ios: false
+  ios: true
+  # iOS rejects icons with an alpha channel (ITMS-90717). The source PNG has
+  # none, but strip it anyway so a future icon swap can't break the upload.
+  remove_alpha_ios: true
   image_path: "assets/icon/icon.png"
