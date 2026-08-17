@@ -44,8 +44,7 @@ class TrailProfileScreen extends StatefulWidget {
 
 class _TrailProfileScreenState extends State<TrailProfileScreen>
     with SingleTickerProviderStateMixin {
-  Position? _currentPosition;
-  bool _isOnTrail = false;
+  bool? _isOnTrail;
   bool _checkingLocation = false;
   late TabController _tabController;
 
@@ -53,7 +52,6 @@ class _TrailProfileScreenState extends State<TrailProfileScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _checkLocationPermission();
   }
 
   @override
@@ -62,41 +60,55 @@ class _TrailProfileScreenState extends State<TrailProfileScreen>
     super.dispose();
   }
 
-  Future<void> _checkLocationPermission() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied)
-      permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.whileInUse ||
-        permission == LocationPermission.always) _startLocationTracking();
-  }
-
-  void _startLocationTracking() {
-    Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high, distanceFilter: 10),
-    ).listen((pos) => setState(() => _currentPosition = pos));
-  }
-
   Future<void> _checkIfOnTrail(
       double startLat, double startLng, double radiusMeters) async {
-    if (_currentPosition == null) {
-      _showSnack('מחפש את המיקום שלך...');
-      return;
-    }
+    if (_checkingLocation) return;
     setState(() => _checkingLocation = true);
-    final distance = Geodesy().distanceBetweenTwoGeoPoints(
-      LatLng(startLat, startLng),
-      LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-    );
-    setState(() {
-      _checkingLocation = false;
-      _isOnTrail = distance <= radiusMeters;
-    });
-    _showSnack(_isOnTrail
-        ? '✓ אתה על המסלול! (${distance.toStringAsFixed(0)}מ מההתחלה)'
-        : 'אתה ${distance.toStringAsFixed(0)}מ מנקודת ההתחלה');
+
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _showSnack('שירותי המיקום במכשיר כבויים');
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.deniedForever) {
+        _showSnack('הרשאת המיקום חסומה בהגדרות המכשיר');
+        return;
+      }
+      if (permission == LocationPermission.denied) {
+        _showSnack('לא ניתנה הרשאה להשתמש במיקום');
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+      final distance = Geodesy().distanceBetweenTwoGeoPoints(
+        LatLng(startLat, startLng),
+        LatLng(position.latitude, position.longitude),
+      );
+      final isOnTrail = distance <= radiusMeters;
+
+      if (!mounted) return;
+      setState(() {
+        _isOnTrail = isOnTrail;
+      });
+      _showSnack(isOnTrail
+          ? '✓ אתה על המסלול! (${distance.toStringAsFixed(0)} מ׳ מההתחלה)'
+          : 'אתה ${distance.toStringAsFixed(0)} מ׳ מההתחלה; '
+              'הרדיוס הוא ${radiusMeters.toStringAsFixed(0)} מ׳');
+    } catch (_) {
+      _showSnack('לא הצלחנו לקרוא את המיקום שלך. נסה שוב');
+    } finally {
+      if (mounted) setState(() => _checkingLocation = false);
+    }
   }
 
   Future<void> _navigateToTrail(double lat, double lng) async {
@@ -298,9 +310,9 @@ class _TrailProfileScreenState extends State<TrailProfileScreen>
                             //  Not on trail → runs the GPS check.
                             //  On trail → opens live mode.
                             _CtaButton(
-                              isOnTrail: _isOnTrail,
+                              isOnTrail: _isOnTrail == true,
                               isChecking: _checkingLocation,
-                              onTap: _isOnTrail
+                              onTap: _isOnTrail == true
                                   ? () => Navigator.push(
                                       context,
                                       MaterialPageRoute(
@@ -343,7 +355,6 @@ class _TrailProfileScreenState extends State<TrailProfileScreen>
                                           startLat: startLat,
                                           startLng: startLng,
                                           startRadiusMeters: radius,
-                                          knownOnTrail: _isOnTrail,
                                         ),
                                       ),
                                     ),

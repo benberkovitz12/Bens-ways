@@ -846,7 +846,7 @@ class _TrailRow extends StatelessWidget {
       height: 202, // a little breathing room — fixes the 2px overflow
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        reverse: true, // RTL: first item starts from the right
+        // The app already supplies RTL, so the first item starts on the right.
         padding: const EdgeInsets.symmetric(horizontal: 16),
         physics: const BouncingScrollPhysics(),
         itemCount: trails.length,

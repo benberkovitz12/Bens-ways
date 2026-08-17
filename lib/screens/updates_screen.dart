@@ -124,6 +124,33 @@ class _Header extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          // Title + unread subtitle — visual right in RTL.
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'עדכונים',
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  fontFamily: AppTheme.font,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                unreadCount == 0 ? 'הכל מעודכן' : '$unreadCount עדכונים חדשים',
+                textAlign: TextAlign.right,
+                style: const TextStyle(
+                  fontFamily: AppTheme.font,
+                  fontSize: 14,
+                  color: AppTheme.textMuted,
+                ),
+              ),
+            ],
+          ),
+
           // "Mark all read" — visual left. Hidden when nothing unread.
           if (onMarkAll != null)
             GestureDetector(
@@ -148,33 +175,6 @@ class _Header extends StatelessWidget {
             )
           else
             const SizedBox(),
-
-          // Title + unread subtitle — visual right
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              const Text(
-                'עדכונים',
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  fontFamily: AppTheme.font,
-                  fontSize: 26,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                unreadCount == 0 ? 'הכל מעודכן' : '$unreadCount עדכונים חדשים',
-                textAlign: TextAlign.right,
-                style: const TextStyle(
-                  fontFamily: AppTheme.font,
-                  fontSize: 14,
-                  color: AppTheme.textMuted,
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );

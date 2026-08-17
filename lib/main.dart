@@ -19,7 +19,8 @@ import 'scripts/seed_paths_1_12.dart';
 import 'scripts/seed_paths_13_27.dart';
 import 'scripts/seed_paths_28_36.dart';
 import 'services/completed_trails_service.dart';
-import 'scripts/seed_school_trail.dart';
+// import 'scripts/seed_school_trail.dart'; // One-time seed; re-enable only when needed.
+// import 'scripts/seed_new_trail.dart'; // Reusable one-trail seed template.
 
 // import 'scripts/seed_trail.dart'; // ← seeding done; re-enable only to re-seed
 
@@ -38,7 +39,8 @@ void main() async {
   // await seedPaths1to12();
   // await seedPaths13to27();
   // await seedPaths28to36();
-  await seedSchoolTrail();
+  // await seedSchoolTrail();
+  // await seedNextTrail();
   await SavedTrailsService.instance.init();
   await CompletedTrailsService.instance.init();
   await UpdatesReadService.instance.init();

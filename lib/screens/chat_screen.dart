@@ -54,12 +54,6 @@ class ChatScreen extends StatefulWidget {
   // Live Mode passes this because it's already tracking the user.
   final bool forceOnTrail;
 
-  // Optional pre-computed answer from the caller. The trail profile
-  // already runs its own GPS check (the "check location" button), so
-  // it passes that result here — chat trusts it and skips re-checking.
-  // Leave null and chat will run its own GPS check on open.
-  final bool? knownOnTrail;
-
   const ChatScreen({
     super.key,
     required this.trailId,
@@ -68,7 +62,6 @@ class ChatScreen extends StatefulWidget {
     required this.startLng,
     this.startRadiusMeters = 100,
     this.forceOnTrail = false,
-    this.knownOnTrail,
   });
 
   @override
@@ -84,6 +77,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   // Mode is now STATE, not a fixed widget field.
   _TrailStatus _status = _TrailStatus.checking;
+  String? _locationStatusMessage;
 
   bool get _isOnTrail => _status == _TrailStatus.onTrail;
 
@@ -93,13 +87,8 @@ class _ChatScreenState extends State<ChatScreen> {
     if (widget.forceOnTrail) {
       // Live Mode already knows we're on the trail.
       _status = _TrailStatus.onTrail;
-    } else if (widget.knownOnTrail != null) {
-      // The caller (e.g. trail profile) already did the GPS check.
-      // Trust it — no need to re-check and risk disagreeing.
-      _status =
-          widget.knownOnTrail! ? _TrailStatus.onTrail : _TrailStatus.offTrail;
     } else {
-      // No answer handed to us — figure it out ourselves.
+      // Every direct chat entry gets a fresh GPS sample.
       _checkProximity();
     }
   }
@@ -113,11 +102,23 @@ class _ChatScreenState extends State<ChatScreen> {
 
   // ── GPS check: are we within startRadiusMeters of the trailhead? ─
   Future<void> _checkProximity() async {
+    if (mounted) {
+      setState(() {
+        _status = _TrailStatus.checking;
+        _locationStatusMessage = null;
+      });
+    }
+
     try {
       // Make sure location services are on.
       final serviceOn = await Geolocator.isLocationServiceEnabled();
       if (!serviceOn) {
-        if (mounted) setState(() => _status = _TrailStatus.offTrail);
+        if (mounted) {
+          setState(() {
+            _status = _TrailStatus.offTrail;
+            _locationStatusMessage = 'שירותי המיקום במכשיר כבויים';
+          });
+        }
         return;
       }
 
@@ -128,7 +129,14 @@ class _ChatScreenState extends State<ChatScreen> {
       }
       if (perm == LocationPermission.denied ||
           perm == LocationPermission.deniedForever) {
-        if (mounted) setState(() => _status = _TrailStatus.offTrail);
+        if (mounted) {
+          setState(() {
+            _status = _TrailStatus.offTrail;
+            _locationStatusMessage = perm == LocationPermission.deniedForever
+                ? 'הרשאת המיקום חסומה בהגדרות המכשיר'
+                : 'לא ניתנה הרשאה להשתמש במיקום';
+          });
+        }
         return;
       }
 
@@ -145,12 +153,21 @@ class _ChatScreenState extends State<ChatScreen> {
       );
 
       if (!mounted) return;
-      setState(() => _status = dist <= widget.startRadiusMeters
-          ? _TrailStatus.onTrail
-          : _TrailStatus.offTrail);
+      final isOnTrail = dist <= widget.startRadiusMeters;
+      setState(() {
+        _status = isOnTrail ? _TrailStatus.onTrail : _TrailStatus.offTrail;
+        _locationStatusMessage = isOnTrail
+            ? 'אתה על המסלול (${dist.toStringAsFixed(0)} מ׳ מנקודת ההתחלה)'
+            : 'אתה ${dist.toStringAsFixed(0)} מ׳ מנקודת ההתחלה; '
+                'הרדיוס הוא ${widget.startRadiusMeters.toStringAsFixed(0)} מ׳';
+      });
     } catch (_) {
-      // Any failure → safest default is off-trail (presets only).
-      if (mounted) setState(() => _status = _TrailStatus.offTrail);
+      if (mounted) {
+        setState(() {
+          _status = _TrailStatus.offTrail;
+          _locationStatusMessage = 'לא הצלחנו לקרוא את המיקום שלך';
+        });
+      }
     }
   }
 
@@ -233,7 +250,10 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
 
             // ── Status strip — changes based on mode ─────────
-            _StatusStrip(status: _status),
+            _StatusStrip(
+              status: _status,
+              message: _locationStatusMessage,
+            ),
             const SizedBox(height: 8),
 
             // ── OFF TRAIL: Preset questions ───────────────────
@@ -449,17 +469,30 @@ class _ChatScreenState extends State<ChatScreen> {
         );
 
       case _TrailStatus.offTrail:
-        // No input bar, just a note explaining why.
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           color: AppTheme.bg,
-          child: const Text(
-            'הגע למסלול כדי לשוחח בחופשיות 🥾',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-                fontFamily: AppTheme.font,
-                fontSize: 13,
-                color: AppTheme.textMuted),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton.icon(
+                onPressed: _checkProximity,
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text('בדוק מיקום שוב'),
+              ),
+              const SizedBox(width: 8),
+              const Flexible(
+                child: Text(
+                  'הגע למסלול כדי לשוחח בחופשיות',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: AppTheme.font,
+                    fontSize: 13,
+                    color: AppTheme.textMuted,
+                  ),
+                ),
+              ),
+            ],
           ),
         );
     }
@@ -469,7 +502,9 @@ class _ChatScreenState extends State<ChatScreen> {
 // ── Status strip widget ───────────────────────────────────────────
 class _StatusStrip extends StatelessWidget {
   final _TrailStatus status;
-  const _StatusStrip({required this.status});
+  final String? message;
+
+  const _StatusStrip({required this.status, this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -483,19 +518,19 @@ class _StatusStrip extends StatelessWidget {
       case _TrailStatus.checking:
         bgColor = AppTheme.accent.withOpacity(0.25);
         fgColor = const Color(0xFF6A6A6A);
-        text = 'בודק את המיקום שלך...';
+        text = message ?? 'בודק את המיקום שלך...';
         icon = Icons.my_location_rounded;
         break;
       case _TrailStatus.onTrail:
         bgColor = const Color(0xFFD3E8D5).withOpacity(0.6);
         fgColor = const Color(0xFF2A6A3A);
-        text = 'אתה על המסלול — שוחח עם המטיילים! 🥾';
+        text = message ?? 'אתה על המסלול — שוחח עם המטיילים! 🥾';
         icon = Icons.check_circle_outline_rounded;
         break;
       case _TrailStatus.offTrail:
         bgColor = AppTheme.accent.withOpacity(0.4);
         fgColor = const Color(0xFF3A7A9A);
-        text = 'שאל מטיילים שנמצאים עכשיו על המסלול';
+        text = message ?? 'שאל מטיילים שנמצאים עכשיו על המסלול';
         icon = Icons.info_outline_rounded;
         break;
     }
