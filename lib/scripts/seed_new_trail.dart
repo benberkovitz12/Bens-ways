@@ -18,7 +18,11 @@ const String newTrailSeedKey = 'CHANGE_ME_UNIQUE_KEY';
 final Map<String, dynamic> newTrailData = {
   'name': 'שם המסלול',
   'description': 'תיאור המסלול',
+
+  // לבחור ערך אחד בלבד:
+  // קל | קל-בינוני | בינוני | בינוני-קשה | קשה | מטיבי לכת
   'difficulty': 'קל',
+
   'distanceKm': '1',
   'duration': 'עד שעה',
   'imageUrl': '',
@@ -32,10 +36,23 @@ final Map<String, dynamic> newTrailData = {
     {'lat': 0.0, 'lng': 0.0}, // End.
   ],
 
+  // לבחור ערך אחד בלבד:
+  // הגליל העליון | הגליל התחתון | חיפה והכרמל | הבקעה והעמקים
+  // השרון | מרכז | ירושלים והסביבה | הנגב
   'region': 'מרכז',
+
+  // false = מסלול יבש | true = מסלול רטוב
   'isWet': false,
+
+  // אפשר לבחור אפס, אחד או יותר:
+  // מפלים | הרים | נחל | תצפית | מעיין
   'attractions': <String>[],
+
+  // לבחור ערך אחד בלבד: חינם | בתשלום
   'entryFee': 'חינם',
+
+  // אפשר לבחור אחד או יותר:
+  // משפחתי | זוגי | קבוצתי | אדם אחד
   'participantType': <String>['משפחתי'],
 
   // Numeric copies used by the filter wizard.
